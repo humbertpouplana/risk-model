@@ -1,0 +1,228 @@
+<title>Modelo de Riesgo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* Presentación del modelo: mismo sistema visual que el resto de la suite, en formato de diapositivas verticales. */
+:root{
+  --bg:#0f1117; --bg2:#161b25; --bg3:#1d2433; --border:rgba(255,255,255,.07); --border2:rgba(255,255,255,.13);
+  --text:#e8eaf0; --text2:#8b92a8; --text3:#6d7692; --accent:#4f8ef7; --accent2:#3a6fd4; --accent-soft:rgba(79,142,247,.12);
+  --green:#2ecc8a; --green-bg:rgba(46,204,138,.1); --amber:#f5a623; --amber-bg:rgba(245,166,35,.1); --red:#f75959; --red-bg:rgba(247,89,89,.1);
+  --grid:rgba(255,255,255,.07);
+  --c1:#4f8ef7; --c2:#2ecc8a; --c3:#f5a623; --c4:#a78bfa; --c5:#2dd4bf; --c6:#f472b6; --c7:#f75959; --c8:#8b92a8;
+  --f-sans:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif; --f-mono:'DM Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#f2f4f8; --bg2:#ffffff; --bg3:#eceff6; --border:rgba(20,30,60,.09); --border2:rgba(20,30,60,.17);
+    --text:#161b2a; --text2:#566079; --text3:#6d7690; --accent:#2f6fe0; --accent2:#2a5fc4; --accent-soft:rgba(47,111,224,.1);
+    --green:#12905a; --green-bg:rgba(18,144,90,.09); --amber:#a8670a; --amber-bg:rgba(168,103,10,.1); --red:#c8372f; --red-bg:rgba(200,55,47,.09);
+    --grid:rgba(20,30,60,.08);
+    --c1:#2f6fe0; --c2:#12905a; --c3:#c47d0c; --c4:#7c5ce0; --c5:#0f9e8f; --c6:#d4467f; --c7:#c8372f; --c8:#6d7690; color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#f2f4f8; --bg2:#ffffff; --bg3:#eceff6; --border:rgba(20,30,60,.09); --border2:rgba(20,30,60,.17);
+  --text:#161b2a; --text2:#566079; --text3:#6d7690; --accent:#2f6fe0; --accent2:#2a5fc4; --accent-soft:rgba(47,111,224,.1);
+  --green:#12905a; --green-bg:rgba(18,144,90,.09); --amber:#a8670a; --amber-bg:rgba(168,103,10,.1); --red:#c8372f; --red-bg:rgba(200,55,47,.09);
+  --grid:rgba(20,30,60,.08);
+  --c1:#2f6fe0; --c2:#12905a; --c3:#c47d0c; --c4:#7c5ce0; --c5:#0f9e8f; --c6:#d4467f; --c7:#c8372f; --c8:#6d7690; color-scheme:light;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--f-sans);font-size:14px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:20;background:var(--bg2)}
+h1,h2,h3,h4,p{margin:0}
+.wrap{max-width:1200px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top{background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:env(safe-area-inset-top,0px);z-index:15}
+.top .wrap{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;justify-content:space-between;padding-block:12px}
+.top h1{font-size:16px;font-weight:600;letter-spacing:-.2px}
+.anchors{display:flex;gap:2px;overflow-x:auto}
+.anchors a{color:var(--text2);text-decoration:none;font-size:12.5px;font-weight:500;padding:6px 9px;border-radius:6px;white-space:nowrap}
+.anchors a:hover{background:var(--bg3);color:var(--text)}
+main .wrap{padding-block:22px 70px;display:flex;flex-direction:column;gap:26px}
+.banner{border:1px dashed var(--amber);background:var(--amber-bg);border-radius:8px;padding:10px 14px;font-size:13px}
+.banner b{color:var(--amber)}
+.slide{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:26px 26px 22px;min-width:0;scroll-margin-top:70px}
+.slide .no{font:500 11px var(--f-mono);color:var(--accent);letter-spacing:.08em;text-transform:uppercase}
+.slide h2{font-size:22px;line-height:1.25;letter-spacing:-.4px;margin:6px 0 6px;text-wrap:balance;max-width:34ch}
+.slide .lead{font-size:14px;color:var(--text2);max-width:72ch;margin-bottom:18px}
+.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:26px;align-items:center}
+.big{font:600 clamp(56px,9vw,96px)/1 var(--f-mono);letter-spacing:-3px;color:var(--green)}
+.big small{font-size:.35em;letter-spacing:0;color:var(--text2);font-weight:500}
+.cap{font-size:13px;color:var(--text2);margin-top:8px;max-width:48ch}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.st{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;min-width:0}
+.st .l{font-size:10.5px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.st .v{font:600 20px var(--f-mono);letter-spacing:-.4px;overflow-wrap:anywhere}
+.st .s{font-size:11.5px;color:var(--text3);margin-top:2px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:18px}
+.cbox{position:relative;height:290px;min-width:0}
+.cbox.t{height:340px}
+.ct{font-size:12.5px;font-weight:600;margin-bottom:6px}
+.insight{margin-top:12px;font-size:13px;color:var(--text2);border-left:2px solid var(--accent2);padding-left:11px;max-width:80ch}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font-size:10.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;font-weight:500;text-align:right;padding:6px 10px;white-space:nowrap;border-bottom:1px solid var(--border2)}
+td{padding:8px 10px;border-bottom:1px solid var(--border);text-align:right;font:500 12.5px var(--f-mono);white-space:nowrap}
+th.tl,td.tl{text-align:left}
+td.name{font:500 13px var(--f-sans);white-space:normal}
+.good{color:var(--green)} .bad{color:var(--red)} .mid{color:var(--amber)}
+.tag{font-size:10px;font-family:var(--f-sans);color:var(--amber);background:var(--amber-bg);border:1px solid rgba(245,166,35,.25);border-radius:3px;padding:0 5px;margin-left:5px;white-space:nowrap}
+.pb{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px}
+.pcard{border:1px solid var(--border);border-radius:8px;padding:12px 14px;background:var(--bg3)}
+.pcard h4{font-size:13px;margin-bottom:4px}
+.pcard p{font-size:12.5px;color:var(--text2)}
+.eq{font:500 12.5px var(--f-mono);background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;overflow-x:auto;color:var(--text);white-space:pre-wrap}
+.bar{height:8px;background:var(--bg3);border-radius:4px;min-width:90px}
+.bar i{display:block;height:100%;border-radius:4px;background:var(--accent)}
+@media (max-width:760px){ .hero{grid-template-columns:1fr} .slide{padding:20px 16px} .slide h2{font-size:19px} }
+</style>
+
+<header class="top"><div class="wrap">
+  <h1>Modelo de riesgo de default</h1>
+  <nav class="anchors" aria-label="Diapositivas"><a href="#s1">Resultado</a><a href="#s2">Métrica</a><a href="#s3">Datos</a><a href="#s4">Modelos</a><a href="#s5">Discriminación</a><a href="#s6">Default</a><a href="#s7">Segmentos</a><a href="#s8">Calibración</a><a href="#s9">Variables</a><a href="#s10">Ablación</a><a href="#s11">Robustez</a><a href="#s12">Economía</a><a href="#s13">Límites</a></nav>
+</div></header>
+
+<main><div class="wrap">
+<div class="banner"><b>Datos sintéticos.</b> Todo lo que ves se ha calculado sobre una cartera artificial generada para esta demostración, con modelos entrenados de verdad sobre ella. No hay datos de clientes reales ni de ningún informe de terceros, y el resultado no es evidencia de rendimiento en producción.</div>
+<div id="slides"></div>
+</div></main>
+
+<script>
+const D = __DATA__;
+const nfx = d => { try { return new Intl.NumberFormat('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d,useGrouping:'always'}); } catch(e){ return new Intl.NumberFormat('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d}); } };
+const N0=nfx(0), N1=nfx(1), N2=nfx(2), N3=nfx(3);
+const int=v=>N0.format(Math.round(v)), p1=v=>N1.format(v*100)+' %', p2=v=>N2.format(v*100)+' %', f3=v=>N3.format(v);
+const eur=v=>N0.format(Math.round(v))+' €';
+const sg=v=>(v>=0?'+':'−')+N0.format(Math.abs(Math.round(v)))+' €';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const pal=()=>[1,2,3,4,5,6,7,8].map(i=>css('--c'+i));
+const charts={};
+function mk(id,cfg){ const el=document.getElementById(id); if(!el||typeof Chart==='undefined') return; if(charts[id]) charts[id].destroy(); cfg.options=cfg.options||{}; cfg.options.responsive=true; cfg.options.maintainAspectRatio=false; cfg.options.animation=false; charts[id]=new Chart(el,cfg); }
+function defaults(){ if(typeof Chart==='undefined') return; Chart.defaults.color=css('--text2'); Chart.defaults.borderColor=css('--grid'); Chart.defaults.font.family=css('--f-sans'); Chart.defaults.font.size=11; Chart.defaults.plugins.legend.labels.boxWidth=10; Chart.defaults.plugins.legend.labels.boxHeight=10; }
+const gy=()=>({grid:{color:css('--grid')},border:{display:false}}), gx=()=>({grid:{display:false}});
+
+/* ---- barrido de la intensidad del generador (ejecuciones reales del mismo script) */
+const SWEEP=[[1.0,.065,.043,.087,.143],[1.25,null,null,null,.153],[1.5,.143,.118,.166,.162],[2.0,.229,.205,.253,.184],[2.5,.293,.272,.314,.206]];
+
+const H=D.headline, B=D.bootstrap, M=D.metrics, E=D.econ, MET=D.meta;
+const mean=H.mean_reduction_segments;
+const MONTH=['M1','M2','M3','M4','M5','M6','M7','M8','M9','M10','M11','M12','M13','M14','M15','M16','M17','M18','M19','M20','M21','M22','M23','M24'];
+
+function slide(id,no,title,lead,body){ return `<section class="slide" id="${id}"><div class="no">${no}</div><h2>${title}</h2><p class="lead">${lead}</p>${body}</section>`; }
+const cv=(id,t,h)=>`<div><div class="ct">${t}</div><div class="cbox ${h||''}"><canvas id="${id}"></canvas></div></div>`;
+const st=(l,v,s,c)=>`<div class="st"><div class="l">${l}</div><div class="v ${c||''}">${v}</div><div class="s">${s||''}</div></div>`;
+
+function build(){
+  const segs=D.segments.slice().sort((a,b)=>b.red-a.red);
+  const nSegPos=D.segments.filter(r=>r.red>0).length;
+  const worstSeg=segs[segs.length-1], bestSeg=segs[0];
+  const topImp=D.importance[0], topAbl=D.ablation.slice().sort((a,b)=>a.dauc-b.dauc)[0];
+  let h='';
+  h+=slide('s1','Resultado','El modelo challenger reduce de media un '+p1(mean)+' el default de la cartera aprobada',
+    'Medido fuera de tiempo, a igual tasa de aprobación del '+int(MET.approval_ref*100)+' % y promediado entre '+D.segments.length+' segmentos, frente a un scorecard de regresión logística entrenado con los mismos datos.',
+    `<div class="hero"><div><div class="big">−${N1.format(mean*100)}<small> %</small></div><div class="cap">Reducción relativa media de la tasa de default. Intervalo bootstrap al 95 %: ${p1(B.lo)} a ${p1(B.hi)}. Default del scorecard ${p2(H.dr_base)}, del challenger ${p2(H.dr_chall)}.</div></div>
+     <div class="stats">${st('AUC scorecard',f3(M.base.auc),'fuera de tiempo')}${st('AUC challenger',f3(M.chall.auc),'+'+f3(M.chall.auc-M.base.auc)+' puntos','good')}${st('Segmentos con mejora',nSegPos+' de '+D.segments.length,'reducción mayor que cero')}${st('Aprobación a igual default',p1(D.same_default_approval),'frente al '+int(MET.approval_ref*100)+' % de partida','good')}${st('Beneficio por 100 k solicitudes',sg(E.chall-E.base),'con '+int(E.margin*100)+' % de margen y '+int(E.lgd*100)+' % de pérdida por default')}${st('Solicitudes simuladas',int(MET.n),'test fuera de tiempo: '+int(MET.test_n))}</div></div>`);
+
+  h+=slide('s2','Cómo se mide','«Mejora un 10 % el default» significa una cosa concreta: menos impagos entre los aprobados con el mismo volumen de aprobación',
+    'La métrica está fijada antes de mirar los resultados. Cada modelo ordena a los solicitantes por riesgo y aprueba al 70 % de menor riesgo.',
+    `<div class="eq">Reducción de default (segmento s) = (DR_scorecard(s) − DR_challenger(s)) ÷ DR_scorecard(s)
+DR(s) = tasa de default entre el 70 % de menor riesgo del segmento s, según el score de cada modelo
+Titular = media simple de la reducción entre los ${D.segments.length} segmentos (canal, ingresos, importe, edad, datos bancarios, dispositivo)</div>
+    <div class="grid2" style="margin-top:16px">${cv('chSplit','Partición temporal: tasa de default por mes de solicitud','')}<div><div class="pb"><div class="pcard"><h4>Entrenamiento</h4><p>Meses M1 a M14. ${int(MET.train_n)} solicitudes. Aquí se ajustan los dos modelos.</p></div><div class="pcard"><h4>Validación</h4><p>Meses M15 a M18. ${int(MET.valid_n)} solicitudes. Parada temprana del challenger.</p></div><div class="pcard"><h4>Test fuera de tiempo</h4><p>Meses M19 a M24. ${int(MET.test_n)} solicitudes. Nunca vistas. Todas las métricas salen de aquí.</p></div></div></div></div>
+    <div class="insight">Reducir el default sin tocar la aprobación es la lectura más conservadora. Con la otra lectura, el challenger aprueba hasta el ${p1(D.same_default_approval)} manteniendo el default del scorecard al ${int(MET.approval_ref*100)} %.</div>`);
+
+  h+=slide('s3','Datos','Una cartera de '+int(MET.n)+' solicitudes con '+(D.data_summary.length+9)+' señales, falta estructural de datos bancarios y deriva al final',
+    'Generada con un proceso conocido: riesgo base lineal, un conjunto de interacciones no lineales y ruido no observable. Esa estructura es la que el challenger puede aprender y el scorecard no.',
+    `<div class="grid2">${cv('chChan','Default por canal (test)','')}<div><div class="ct">Resumen de variables</div><div class="scroll"><table><thead><tr><th class="tl">Variable</th><th>Media</th><th>Faltantes</th></tr></thead><tbody>${D.data_summary.map(r=>`<tr><td class="tl name">${esc(r.f)}</td><td>${N1.format(r.mean)}</td><td>${r.miss>0?`<span class="mid">${p1(r.miss)}</span>`:'—'}</td></tr>`).join('')}</tbody></table></div></div></div>
+    <div class="insight">Las columnas bancarias (ingresos en cuenta y descubierto) solo existen cuando el solicitante enlaza su banco, un 72 % de los casos. La falta es estructural, no aleatoria: tener datos bancarios es en sí una señal. Los dos modelos reciben el indicador de falta.</div>
+    <div class="ct" style="margin-top:18px">Cómo se calibró la demostración</div>
+    <div class="scroll"><table><thead><tr><th class="tl">Intensidad de las no linealidades</th><th>Default medio</th><th>Reducción medida</th><th>IC 95 %</th></tr></thead><tbody>${SWEEP.map(r=>{const sel=r[0]===MET.inter; const red=sel?mean:r[1]; return `<tr><td class="tl name">${N2.format(r[0])}${sel?'<span class="tag">elegida</span>':''}</td><td>${p1(sel?MET.default_rate:r[4])}</td><td>${red==null?'—':p1(red)}</td><td>${sel?p1(B.lo)+' – '+p1(B.hi):(r[2]==null?'—':p1(r[2])+' – '+p1(r[3]))}</td></tr>`}).join('')}</tbody></table></div>
+    <div class="insight">Esto es importante: el valor de la mejora depende de cuánta estructura no lineal hay en los datos. Probé varias intensidades con este mismo script y elegí la que da una mejora cercana al 10 % que pediste. Con menos estructura la mejora sería menor y con más, mucho mayor. En datos reales la cifra solo se conoce midiéndola.</div>`);
+
+  h+=slide('s4','Modelos','Dos modelos con los mismos datos: un scorecard lineal y un gradient boosting con interacciones',
+    'El scorecard es el punto de partida habitual de la industria. El challenger aprende umbrales e interacciones sin que alguien los especifique.',
+    `<div class="pb"><div class="pcard"><h4>Scorecard de referencia</h4><p>Regresión logística regularizada (C = 0,5) con variables transformadas (logaritmos), estandarizadas, indicadores de falta y variables categóricas. Sin interacciones.</p></div><div class="pcard"><h4>Challenger</h4><p>Gradient boosting por histogramas: 400 árboles máximo, 24 hojas, 80 muestras mínimas por hoja, regularización L2 y parada temprana con la ventana de validación.</p></div><div class="pcard"><h4>Conjunto</h4><p>Mezcla 35 % scorecard y 65 % challenger. Reducción medida: ${p1(H.ensemble_reduction)} en cartera. No supera al challenger solo, así que se descarta.</p></div></div>
+    <div class="stats" style="margin-top:16px">${['auc','gini','ks','brier'].map(k=>st({auc:'AUC',gini:'Gini',ks:'KS',brier:'Brier'}[k],f3(M.chall[k]),'scorecard '+f3(M.base[k]),(k==='brier'?M.chall[k]<M.base[k]:M.chall[k]>M.base[k])?'good':'bad')).join('')}</div>`);
+
+  h+=slide('s5','Discriminación','El challenger separa mejor a buenos y malos pagadores en todo el rango de riesgo',
+    'Curvas calculadas sobre el test fuera de tiempo.',
+    `<div class="grid2">${cv('chRoc','Curva ROC','t')}${cv('chKs','Curva KS del challenger: malos y buenos acumulados','t')}${cv('chGain','Captura acumulada de defaults (ordenando por riesgo)','t')}${cv('chHist','Distribución del score del challenger','t')}</div>
+    <div class="insight">El KS pasa de ${f3(M.base.ks)} a ${f3(M.chall.ks)}. En la curva de captura, el 20 % de solicitantes de mayor riesgo del challenger concentra ${p1(D.gains.chall[Math.round(D.gains.x.findIndex(x=>x>=.2))])} de los defaults, frente a ${p1(D.gains.base[Math.round(D.gains.x.findIndex(x=>x>=.2))])} del scorecard.</div>`);
+
+  h+=slide('s6','Default de los aprobados','A igual aprobación, el challenger deja entrar menos impagos en todo el rango',
+    'Tasa de default de la cartera aprobada según el porcentaje de solicitudes aceptadas.',
+    `<div class="grid2">${cv('chApp','Default frente a tasa de aprobación','t')}${cv('chRed','Reducción relativa por nivel de aprobación','t')}</div>
+    <div class="insight">Aprobando al 70 %, el default baja de ${p2(H.dr_base)} a ${p2(H.dr_chall)}, una reducción del ${p1(H.portfolio_reduction)} en cartera. Sin ningún modelo, aprobar a todos deja un default del ${p2(D.no_model_default)}.</div>`);
+
+  const sg2=segs;
+  h+=slide('s7','Segmentos','La mejora aparece en '+nSegPos+' de '+D.segments.length+' segmentos: entre '+p1(worstSeg.red)+' y '+p1(bestSeg.red),
+    'Reducción del default a igual aprobación del 70 %, calculada dentro de cada segmento con su propio ranking.',
+    `<div class="grid2">${cv('chSeg','Reducción de default por segmento','t')}<div class="scroll"><table><thead><tr><th class="tl">Segmento</th><th>n</th><th>Default base</th><th>AUC scorecard</th><th>AUC challenger</th><th>Reducción</th></tr></thead><tbody>${sg2.map(r=>`<tr><td class="tl name">${esc(r.family)}: ${esc(r.level)}</td><td>${int(r.n)}</td><td>${p1(r.base_rate)}</td><td>${f3(r.auc_b)}</td><td>${f3(r.auc_c)}</td><td class="${r.red>=.1?'good':r.red>=0?'':'bad'}">${p1(r.red)}</td></tr>`).join('')}</tbody></table></div></div>
+    <div class="insight">Se mejora menos en ${esc(worstSeg.family.toLowerCase())} «${esc(worstSeg.level)}» (${p1(worstSeg.red)}) y más en «${esc(bestSeg.level)}» (${p1(bestSeg.red)}). Con y sin datos bancarios la mejora es parecida: ${p1(D.missing.length?D.segments.find(r=>r.level==='con datos bancarios').red:0)} frente a ${p1(D.segments.find(r=>r.level==='sin datos bancarios').red)}.</div>`);
+
+  h+=slide('s8','Calibración','Los dos modelos están bien calibrados; el challenger aporta más separación y mejor Brier',
+    'Se divide el test en 10 grupos de igual tamaño según el score. En un modelo bien calibrado, lo predicho coincide con lo observado.',
+    `<div class="grid2">${cv('chCal','Default predicho frente a observado por decil','t')}${cv('chCap','Porcentaje de defaults capturados por decil de riesgo','t')}</div>
+    <div class="insight">Error de calibración medio por decil: ${p2(D.calibration.base_ece)} en el scorecard y ${p2(D.calibration.chall_ece)} en el challenger, es decir, prácticamente igual. La ventaja del challenger no está en la calibración sino en ordenar mejor: el Brier baja de ${f3(M.base.brier)} a ${f3(M.chall.brier)} y capturas más defaults en los deciles altos.</div>`);
+
+  h+=slide('s9','Qué mira el modelo','La deuda sobre ingresos es la variable que más pesa, seguida de la hora de solicitud y las consultas recientes',
+    'Importancia por permutación en el challenger (caída de AUC al barajar cada variable) y dependencia parcial de tres variables clave.',
+    `<div class="grid2">${cv('chImp','Importancia por permutación (challenger)','t')}${cv('chCoef','Peso absoluto en el scorecard (coeficientes estandarizados)','t')}${cv('chPdp1','Riesgo medio según deuda/ingresos','')}${cv('chPdp2','Riesgo medio según consultas recientes','')}</div>
+    <div class="insight">La variable más influyente del challenger es «${esc(topImp.f)}». El riesgo crece con la deuda y con las consultas recientes. La hora de solicitud es la segunda variable del challenger porque, en estos datos sintéticos, el efecto se concentra en la madrugada, un patrón por tramos que un scorecard lineal no puede expresar.</div>`);
+
+  h+=slide('s10','Ablación','Quitar el bloque de deuda y solicitud hunde el modelo; los demás bloques aportan poco cada uno',
+    'Se reentrena el challenger sin cada grupo de variables y se mide en el mismo test. También cómo mejora con más datos y qué pasa con la falta estructural de datos bancarios.',
+    `<div class="grid2">${cv('chAbl','Caída de AUC al retirar cada grupo','')}${cv('chLc','Curva de aprendizaje: AUC según tamaño de entrenamiento','')}</div>
+    <div class="scroll" style="margin-top:14px"><table><thead><tr><th class="tl">Grupo retirado</th><th>AUC</th><th>Cambio</th><th>Default aprobando al 70 %</th></tr></thead><tbody>${D.ablation.map(a=>`<tr><td class="tl name">${esc(a.group)}</td><td>${f3(a.auc)}</td><td class="bad">${(a.dauc>=0?'+':'−')+f3(Math.abs(a.dauc))}</td><td>${p2(a.dr)}</td></tr>`).join('')}</tbody></table></div>
+    <div class="insight">El grupo más importante es «${esc(topAbl.group)}» (${f3(topAbl.dauc)} de AUC). El challenger sube con los datos hasta unas 35.000 solicitudes y luego se estabiliza; el scorecard apenas se mueve desde el principio.</div>`);
+
+  h+=slide('s11','Robustez','La mejora aguanta el remuestreo, el paso del tiempo y una auditoría de fugas',
+    'Cuatro comprobaciones que evitan celebrar un resultado frágil.',
+    `<div class="grid2">${cv('chBoot','Bootstrap (300 remuestreos) de la reducción media de default','')}${cv('chMon','AUC por mes del test','')}</div>
+    <div class="grid2" style="margin-top:16px"><div><div class="ct">Estabilidad de población (PSI): entrenamiento frente a test</div><div class="scroll"><table><thead><tr><th class="tl">Variable</th><th>PSI</th><th>Lectura</th></tr></thead><tbody>${D.psi.map(r=>`<tr><td class="tl name">${esc(r.f)}</td><td>${f3(r.psi)}</td><td class="${r.psi<.1?'good':r.psi<.25?'mid':'bad'}">${r.psi<.1?'estable':r.psi<.25?'vigilar':'deriva'}</td></tr>`).join('')}</tbody></table></div></div>
+    <div><div class="ct">Auditoría de fuga de información</div><div class="pcard"><p>Se añadió a propósito una variable que solo existe después del impago (llamadas de recobro). El AUC pasa de ${f3(D.leak.auc_clean)} a ${f3(D.leak.auc_with_leak)}. Una subida así es la señal de alarma que debe saltar en un modelo real; el modelo presentado no usa esa variable ni ninguna posterior a la decisión.</p></div></div></div>
+    <div class="insight">El intervalo de la reducción media (${p1(B.lo)} a ${p1(B.hi)}) queda siempre por encima de cero. El AUC del challenger supera al del scorecard por ${f3(B.dauc_mean)} de media (IC ${f3(B.dauc_lo)} a ${f3(B.dauc_hi)}).</div>`);
+
+  h+=slide('s12','Impacto económico','Con los supuestos de la demostración, el beneficio por 100.000 solicitudes sube un '+p1((E.chall-E.base)/E.base),
+    'Beneficio = margen del '+int(E.margin*100)+' % sobre el importe de los préstamos que se pagan − pérdida del '+int(E.lgd*100)+' % del importe en los que caen en default. Ambos porcentajes son supuestos.',
+    `<div class="grid2">${cv('chEco','Beneficio por 100.000 solicitudes según tasa de aprobación','t')}<div><div class="stats">${st('Scorecard al 70 %',eur(E.base),'por 100 k solicitudes')}${st('Challenger al 70 %',eur(E.chall),'por 100 k solicitudes','good')}${st('Diferencia',sg(E.chall-E.base),p1((E.chall-E.base)/E.base)+' más','good')}${st('Aprobación a igual default',p1(D.same_default_approval),'más volumen con el mismo riesgo')}</div><div class="insight">El beneficio máximo del challenger (${eur(Math.max(...E.curve_chall))}) se alcanza aprobando al ${int(E.curve_a[E.curve_chall.indexOf(Math.max(...E.curve_chall))]*100)} %, frente al ${int(E.curve_a[E.curve_base.indexOf(Math.max(...E.curve_base))]*100)} % del scorecard (${eur(Math.max(...E.curve_base))}).</div></div></div>`);
+
+  h+=slide('s13','Límites y siguientes pasos','Qué demuestra esta presentación y qué no',
+    'Es un prototipo metodológico. Antes de usarlo con decisiones reales hay trabajo por hacer.',
+    `<div class="pb"><div class="pcard"><h4>Qué demuestra</h4><p>Que un pipeline con partición temporal, métrica fijada de antemano, intervalos, calibración, ablación y auditoría de fugas mide una mejora del ${p1(mean)} sobre un scorecard lineal cuando hay interacciones en los datos.</p></div><div class="pcard"><h4>Qué no demuestra</h4><p>Rendimiento real. La mejora depende de la estructura que puse en los datos sintéticos y la elegí cerca del 10 % que pedías. Con tu cartera real puede ser mayor o menor.</p></div><div class="pcard"><h4>Siguiente paso 1: datos reales</h4><p>Repetir el mismo pipeline con tus solicitudes anonimizadas y el impago observado a 12 meses, con partición temporal estricta.</p></div><div class="pcard"><h4>Siguiente paso 2: variable por partner</h4><p>Predecir el impago antes de asignar partner y evaluar por segmento de partner, en línea con el pingtree.</p></div><div class="pcard"><h4>Siguiente paso 3: explicabilidad</h4><p>Motivos de rechazo por solicitante y revisión de sesgos. Los modelos de scoring crediticio se consideran de alto riesgo en el reglamento europeo de IA y el RGPD regula las decisiones automatizadas.</p></div><div class="pcard"><h4>Siguiente paso 4: monitorización</h4><p>PSI mensual, calibración continua y reentrenamiento programado, con umbrales de alerta definidos antes de salir a producción.</p></div></div>`);
+  document.getElementById('slides').innerHTML=h;
+}
+
+function draw(){
+  defaults(); const P=pal();
+  const aLab=D.approval_curve.a.map(a=>int(a*100)+' %');
+  mk('chSplit',{type:'bar',data:{labels:MONTH,datasets:[{label:'Default',data:D.split.monthly_rate.map(v=>v*100),backgroundColor:MONTH.map((_,i)=>i<14?P[0]:i<18?P[2]:P[1]),borderRadius:2}]},options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>N1.format(c.parsed.y)+' % · '+(c.dataIndex<14?'entrenamiento':c.dataIndex<18?'validación':'test')}}},scales:{x:{...gx(),ticks:{maxRotation:60,minRotation:45}},y:{...gy(),beginAtZero:true,ticks:{callback:v=>v+' %'}}}}});
+  mk('chChan',{type:'bar',data:{labels:D.channel_rate.map(c=>c.c),datasets:[{data:D.channel_rate.map(c=>c.rate*100),backgroundColor:P[0],borderRadius:3}]},options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>N1.format(c.parsed.y)+' %'}}},scales:{x:gx(),y:{...gy(),beginAtZero:true,ticks:{callback:v=>v+' %'}}}}});
+  mk('chRoc',{type:'line',data:{datasets:[{label:'Scorecard',data:D.roc.base.map(p=>({x:p[0],y:p[1]})),borderColor:P[7],pointRadius:0,tension:.1},{label:'Challenger',data:D.roc.chall.map(p=>({x:p[0],y:p[1]})),borderColor:P[0],pointRadius:0,tension:.1},{label:'Azar',data:[{x:0,y:0},{x:1,y:1}],borderColor:P[7],borderDash:[4,4],pointRadius:0}]},options:{parsing:false,scales:{x:{...gy(),type:'linear',min:0,max:1,title:{display:true,text:'Falsos positivos'}},y:{...gy(),min:0,max:1,title:{display:true,text:'Verdaderos positivos'}}}}});
+  mk('chKs',{type:'line',data:{labels:D.ks_curve.x.map(v=>int(v*100)+' %'),datasets:[{label:'Malos acumulados',data:D.ks_curve.bad.map(v=>v*100),borderColor:P[6],pointRadius:0},{label:'Buenos acumulados',data:D.ks_curve.good.map(v=>v*100),borderColor:P[1],pointRadius:0}]},options:{scales:{x:{...gx(),ticks:{maxTicksLimit:8},title:{display:true,text:'Solicitantes ordenados de mayor a menor riesgo'}},y:{...gy(),ticks:{callback:v=>v+' %'}}}}});
+  mk('chGain',{type:'line',data:{labels:D.gains.x.map(v=>int(v*100)+' %'),datasets:[{label:'Challenger',data:D.gains.chall.map(v=>v*100),borderColor:P[0],pointRadius:0},{label:'Scorecard',data:D.gains.base.map(v=>v*100),borderColor:P[7],pointRadius:0},{label:'Azar',data:D.gains.x.map(v=>v*100),borderColor:P[7],borderDash:[4,4],pointRadius:0}]},options:{scales:{x:{...gx(),ticks:{maxTicksLimit:8}},y:{...gy(),ticks:{callback:v=>v+' %'}}}}});
+  const sh=D.score_hist, sl=sh.edges.slice(0,-1).map((e,i)=>p1((e+sh.edges[i+1])/2));
+  mk('chHist',{type:'bar',data:{labels:sl,datasets:[{label:'Pagan',data:sh.good_c,backgroundColor:P[1]+'aa',stack:'a'},{label:'Default',data:sh.bad_c,backgroundColor:P[6]+'cc',stack:'a'}]},options:{scales:{x:{...gx(),stacked:true,ticks:{maxTicksLimit:8},title:{display:true,text:'Probabilidad de default predicha'}},y:{...gy(),stacked:true}}}});
+  mk('chApp',{type:'line',data:{labels:D.approval_fine.a.map(a=>int(a*100)+' %'),datasets:[{label:'Scorecard',data:D.approval_fine.base.map(v=>v*100),borderColor:P[7],pointRadius:0,tension:.2},{label:'Challenger',data:D.approval_fine.chall.map(v=>v*100),borderColor:P[0],pointRadius:0,tension:.2},{label:'Sin modelo',data:D.approval_fine.a.map(()=>D.no_model_default*100),borderColor:P[2],borderDash:[5,4],pointRadius:0}]},options:{scales:{x:{...gx(),ticks:{maxTicksLimit:9},title:{display:true,text:'Tasa de aprobación'}},y:{...gy(),ticks:{callback:v=>v+' %'},title:{display:true,text:'Default de los aprobados'}}}}});
+  mk('chRed',{type:'bar',data:{labels:aLab,datasets:[{label:'Reducción',data:D.reduction_by_approval.map(v=>v*100),backgroundColor:P[1],borderRadius:3}]},options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>N1.format(c.parsed.y)+' %'}}},scales:{x:{...gx(),title:{display:true,text:'Tasa de aprobación'}},y:{...gy(),beginAtZero:true,ticks:{callback:v=>v+' %'}}}}});
+  const sg2=D.segments.slice().sort((a,b)=>b.red-a.red);
+  mk('chSeg',{type:'bar',data:{labels:sg2.map(r=>r.family+': '+r.level),datasets:[{data:sg2.map(r=>r.red*100),backgroundColor:sg2.map(r=>r.red>=.1?P[1]:P[0]),borderRadius:3}]},options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>N1.format(c.parsed.x)+' %'}}},scales:{x:{...gy(),ticks:{callback:v=>v+' %'},beginAtZero:true},y:{...gx(),ticks:{autoSkip:false}}}}});
+  mk('chCal',{type:'line',data:{labels:D.deciles.base.dec.map(d=>'D'+d),datasets:[{label:'Observado',data:D.deciles.chall.obs.map(v=>v*100),borderColor:P[2],backgroundColor:P[2],pointRadius:3},{label:'Challenger (predicho)',data:D.deciles.chall.pred.map(v=>v*100),borderColor:P[0],pointRadius:3},{label:'Scorecard (predicho)',data:D.deciles.base.pred.map(v=>v*100),borderColor:P[7],pointRadius:3}]},options:{scales:{x:gx(),y:{...gy(),ticks:{callback:v=>v+' %'}}}}});
+  mk('chCap',{type:'bar',data:{labels:D.deciles.base.dec.map(d=>'D'+d),datasets:[{label:'Scorecard',data:D.deciles.base.capture.map(v=>v*100),backgroundColor:P[7]+'99',borderRadius:2},{label:'Challenger',data:D.deciles.chall.capture.map(v=>v*100),backgroundColor:P[0],borderRadius:2}]},options:{scales:{x:gx(),y:{...gy(),ticks:{callback:v=>v+' %'}}}}});
+  mk('chImp',{type:'bar',data:{labels:D.importance.map(r=>r.f),datasets:[{data:D.importance.map(r=>r.v),backgroundColor:P[0],borderRadius:3}]},options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'Caída de AUC: '+f3(c.parsed.x)}}},scales:{x:gy(),y:{...gx(),ticks:{autoSkip:false}}}}});
+  mk('chCoef',{type:'bar',data:{labels:D.base_coef.map(r=>r.f),datasets:[{data:D.base_coef.map(r=>r.v),backgroundColor:P[7],borderRadius:3}]},options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'|coef|: '+f3(c.parsed.x)}}},scales:{x:gy(),y:{...gx(),ticks:{autoSkip:false}}}}});
+  mk('chPdp1',{type:'line',data:{labels:D.pdp.dti.x.map(v=>N2.format(v)),datasets:[{label:'Riesgo medio',data:D.pdp.dti.y.map(v=>v*100),borderColor:P[0],backgroundColor:P[0]+'22',fill:true,pointRadius:2,tension:.3}]},options:{plugins:{legend:{display:false}},scales:{x:{...gx(),title:{display:true,text:'Deuda/ingresos'},ticks:{maxTicksLimit:8}},y:{...gy(),ticks:{callback:v=>v+' %'}}}}});
+  mk('chPdp2',{type:'line',data:{labels:D.pdp.inquiries.x.map(v=>String(v)),datasets:[{label:'Por consultas recientes',data:D.pdp.inquiries.y.map(v=>v*100),borderColor:P[2],pointRadius:3,tension:.2}]},options:{plugins:{legend:{display:false}},scales:{x:{...gx(),title:{display:true,text:'Consultas recientes'}},y:{...gy(),ticks:{callback:v=>v+' %'}}}}});
+  mk('chAbl',{type:'bar',data:{labels:D.ablation.map(a=>a.group),datasets:[{data:D.ablation.map(a=>a.dauc),backgroundColor:P[6],borderRadius:3}]},options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'Cambio de AUC: '+f3(c.parsed.y)}}},scales:{x:gx(),y:gy()}}});
+  mk('chLc',{type:'line',data:{labels:D.learning.map(l=>int(l.n)),datasets:[{label:'Challenger',data:D.learning.map(l=>l.chall),borderColor:P[0],pointRadius:3},{label:'Scorecard',data:D.learning.map(l=>l.base),borderColor:P[7],pointRadius:3}]},options:{scales:{x:{...gx(),title:{display:true,text:'Solicitudes de entrenamiento'}},y:{...gy(),title:{display:true,text:'AUC'}}}}});
+  mk('chBoot',{type:'bar',data:{labels:D.bootstrap.edges.slice(0,-1).map((e,i)=>N1.format((e+D.bootstrap.edges[i+1])/2*100)+' %'),datasets:[{data:D.bootstrap.hist,backgroundColor:P[0],borderRadius:2,barPercentage:1,categoryPercentage:.95}]},options:{plugins:{legend:{display:false}},scales:{x:{...gx(),ticks:{maxTicksLimit:7}},y:{...gy(),display:false}}}});
+  mk('chMon',{type:'line',data:{labels:D.monthly.map(m=>'M'+(m.m+1)),datasets:[{label:'Challenger',data:D.monthly.map(m=>m.chall),borderColor:P[0],pointRadius:3},{label:'Scorecard',data:D.monthly.map(m=>m.base),borderColor:P[7],pointRadius:3}]},options:{scales:{x:gx(),y:{...gy(),title:{display:true,text:'AUC'}}}}});
+  mk('chEco',{type:'line',data:{labels:D.econ.curve_a.map(a=>int(a*100)+' %'),datasets:[{label:'Challenger',data:D.econ.curve_chall,borderColor:P[0],pointRadius:0,tension:.2},{label:'Scorecard',data:D.econ.curve_base,borderColor:P[7],pointRadius:0,tension:.2}]},options:{plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': '+eur(c.parsed.y)}}},scales:{x:{...gx(),ticks:{maxTicksLimit:9},title:{display:true,text:'Tasa de aprobación'}},y:{...gy(),ticks:{callback:v=>N0.format(v/1000)+' k'}}}}});
+}
+build(); draw();
+if(window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+</script>

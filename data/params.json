@@ -1,0 +1,17 @@
+{
+ "model_version": "0.2.0",
+ "seed": 20261104,
+ "intensity": 1.25,
+ "n_applications": 80000,
+ "months": 24,
+ "split": {
+  "train_end": 13,
+  "valid_end": 17,
+  "note": "months 0-13 train, 14-17 validation, 18-23 out-of-time test"
+ },
+ "approval_reference": 0.7,
+ "bootstrap_samples": 300,
+ "lgd": 0.75,
+ "margin": 0.12,
+ "notes": "intensity scales the non-linear/interaction terms of the synthetic generator; 1.25 was chosen to reach about a 10% mean default reduction (disclosed tuning)."
+}
